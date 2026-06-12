@@ -38,9 +38,9 @@ app.use(compression());
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Serve static files from frontend
-app.use(express.static('frontend'));
-app.use('/pages', express.static('frontend/pages'));
+// Serve static files from frontend (FIXED for Render)
+app.use(express.static(path.join(__dirname, '../frontend')));
+app.use('/pages', express.static(path.join(__dirname, '../frontend/pages')));
 
 // Rate limiting
 const limiter = rateLimit({
