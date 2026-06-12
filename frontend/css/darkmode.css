@@ -1,0 +1,23 @@
+﻿/* Dark Mode Styles */
+body.dark-mode {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+
+body.dark-mode .card {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background: #2d2d3d;
+    color: white;
+}
+
+.dark-mode-toggle {
+    transition: transform 0.3s ease;
+}
+
+.dark-mode-toggle:hover {
+    transform: rotate(180deg);
+}

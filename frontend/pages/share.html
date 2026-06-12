@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Trip - AI Travel Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .shared-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #ffd89b, #c7e9fb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .shared-badge {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+        }
+
+        .trip-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .trip-header h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .trip-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 50px;
+        }
+
+        .itinerary {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            line-height: 1.8;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .error h3 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            .shared-card { padding: 25px; }
+            .trip-header h2 { font-size: 1.5rem; }
+            .trip-stats { gap: 15px; }
+            .stat { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="shared-card" id="content">
+            <div class="shared-badge">
+                <span class="badge">🔗 Shared Trip</span>
+            </div>
+            <div id="tripContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 20px;">Loading shared trip...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get share code from URL
+        const shareCode = window.location.pathname.split('/').pop();
+        
+        async function loadSharedTrip() {
+            try {
+                const response = await fetch(`http://localhost:5000/api/trips/share/${shareCode}`);
+                
+                if (!response.ok) {
+                    throw new Error('Trip not found');
+                }
+                
+                const trip = await response.json();
+                displayTrip(trip);
+            } catch (error) {
+                displayError();
+            }
+        }
+        
+        function displayTrip(trip) {
+            const container = document.getElementById('tripContent');
+            container.innerHTML = `
+                <div class="trip-header">
+                    <h2>✈️ ${trip.destination}</h2>
+                    <div class="trip-stats">
+                        <div class="stat">📅 ${trip.days} days</div>
+                        <div class="stat">💰 $${trip.budget}</div>
+                        <div class="stat">🎯 ${trip.interests || 'General'}</div>
+                        <div class="stat">🍽️ ${trip.cuisine || 'Local'}</div>
+                    </div>
+                </div>
+                <h3>📋 Itinerary</h3>
+                <div class="itinerary">${trip.itinerary || 'No itinerary details available.'}</div>
+                <button class="copy-btn" onclick="copyToClipboard()">📋 Copy Itinerary</button>
+                <button class="back-btn" onclick="goBack()">← Back to Planner</button>
+            `;
+        }
+        
+        function displayError() {
+            const container = document.getElementById('tripContent');
+            container.innerHTML = `
+                <div class="error">
+                    <h3>❌ Trip Not Found</h3>
+                    <p>The shared trip you're looking for doesn't exist or has been removed.</p>
+                    <button class="back-btn" onclick="goBack()" style="margin-top: 30px;">← Back to Planner</button>
+                </div>
+            `;
+        }
+        
+        function copyToClipboard() {
+            const itinerary = document.querySelector('.itinerary')?.innerText;
+            if (itinerary) {
+                navigator.clipboard.writeText(itinerary);
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }
+        }
+        
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+        
+        loadSharedTrip();
+    </script>
+</body>
+</html>

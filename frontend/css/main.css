@@ -1,0 +1,41 @@
+﻿/* Main CSS for AI Travel Planner */
+:root {
+    --primary: #667eea;
+    --secondary: #764ba2;
+    --accent: #ff6b6b;
+    --success: #00b894;
+    --text: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: var(--text);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.btn {
+    background: var(--accent);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}

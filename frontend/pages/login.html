@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Travel Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            transform: scale(1.01);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+        }
+
+        .switch-btn {
+            background: transparent;
+            border: 2px solid white;
+            margin-top: 15px;
+        }
+
+        .switch-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .error {
+            color: #ff6b6b;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .success {
+            color: #00b894;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>✈️ AI Travel Planner</h1>
+        <p class="subtitle" id="formTitle">Login to your account</p>
+        
+        <input type="text" id="name" placeholder="Full Name" style="display: none;">
+        <input type="email" id="email" placeholder="Email address">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button id="submitBtn" onclick="submitForm()">Login</button>
+        <button class="switch-btn" onclick="toggleMode()" id="switchBtn">Create an account</button>
+        
+        <div id="errorMsg" class="error"></div>
+        <div id="successMsg" class="success"></div>
+    </div>
+
+    <script>
+        let isLoginMode = true;
+
+        function toggleMode() {
+            isLoginMode = !isLoginMode;
+            const nameInput = document.getElementById('name');
+            const submitBtn = document.getElementById('submitBtn');
+            const formTitle = document.getElementById('formTitle');
+            const switchBtn = document.getElementById('switchBtn');
+            
+            if (isLoginMode) {
+                nameInput.style.display = 'none';
+                submitBtn.innerHTML = 'Login';
+                formTitle.innerHTML = 'Login to your account';
+                switchBtn.innerHTML = 'Create an account';
+            } else {
+                nameInput.style.display = 'block';
+                submitBtn.innerHTML = 'Register';
+                formTitle.innerHTML = 'Create a new account';
+                switchBtn.innerHTML = 'Back to Login';
+            }
+        }
+
+        async function submitForm() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const name = document.getElementById('name').value;
+            
+            if (!email || !password) {
+                showError('Please fill all fields');
+                return;
+            }
+            
+            if (!isLoginMode && !name) {
+                showError('Please enter your name');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<div class="spinner"></div> Processing...';
+            submitBtn.disabled = true;
+            
+            try {
+                const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+                const body = isLoginMode ? { email, password } : { name, email, password };
+                
+                const response = await fetch(`http://localhost:5000${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showSuccess(isLoginMode ? 'Login successful!' : 'Registration successful!');
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 1500);
+                } else {
+                    showError(data.error || 'Authentication failed');
+                }
+            } catch (error) {
+                showError('Connection error. Make sure server is running.');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function showError(msg) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.innerHTML = msg;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function showSuccess(msg) {
+            const successDiv = document.getElementById('successMsg');
+            successDiv.innerHTML = msg;
+            successDiv.style.display = 'block';
+        }
+
+        // Enter key support
+        document.getElementById('email').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitForm();
+        });
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitForm();
+        });
+    </script>
+</body>
+</html>

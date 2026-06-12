@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - AI Travel Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .avatar {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-circle {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #ffd89b, #ff6b6b);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            transform: scale(1.01);
+        }
+
+        .readonly-field {
+            background: rgba(255, 255, 255, 0.7);
+            cursor: not-allowed;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd89b;
+        }
+
+        .preferences {
+            margin: 30px 0;
+        }
+
+        .preference-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tag:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .tag.selected {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+
+        button {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 2px solid white;
+            margin-top: 15px;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            margin-top: 15px;
+        }
+
+        .success-msg {
+            background: rgba(0, 184, 148, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            .profile-card { padding: 25px; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-card">
+            <h1>👤 My Profile</h1>
+            
+            <div class="avatar">
+                <div class="avatar-circle" id="avatarIcon">✈️</div>
+            </div>
+
+            <div id="successMsg" class="success-msg"></div>
+
+            <div class="form-group">
+                <label>📧 Email</label>
+                <input type="email" id="email" class="readonly-field" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>👨‍💼 Name</label>
+                <input type="text" id="name" placeholder="Your name">
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number" id="tripsCount">0</div>
+                    <p>Total Trips</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="aiCount">0</div>
+                    <p>AI Generations</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="memberSince">-</div>
+                    <p>Member Since</p>
+                </div>
+            </div>
+
+            <div class="preferences">
+                <h3>🍽️ Cuisine Preferences</h3>
+                <div class="preference-tags" id="cuisineTags">
+                    <span class="tag">Italian</span>
+                    <span class="tag">Japanese</span>
+                    <span class="tag">Mexican</span>
+                    <span class="tag">Indian</span>
+                    <span class="tag">French</span>
+                    <span class="tag">Thai</span>
+                    <span class="tag">Spanish</span>
+                </div>
+            </div>
+
+            <div class="preferences">
+                <h3>🎯 Travel Interests</h3>
+                <div class="preference-tags" id="interestTags">
+                    <span class="tag">Adventure</span>
+                    <span class="tag">Food</span>
+                    <span class="tag">History</span>
+                    <span class="tag">Art</span>
+                    <span class="tag">Nature</span>
+                    <span class="tag">Shopping</span>
+                    <span class="tag">Beaches</span>
+                    <span class="tag">Mountains</span>
+                </div>
+            </div>
+
+            <button onclick="updateProfile()">💾 Save Profile</button>
+            <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedCuisines = [];
+        let selectedInterests = [];
+
+        function loadUserData() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('name').value = user.name || '';
+            document.getElementById('tripsCount').textContent = user.tripsCount || 0;
+            document.getElementById('aiCount').textContent = localStorage.getItem('aiCount') || 0;
+            
+            const joinDate = new Date(parseInt(localStorage.getItem('joinDate') || Date.now()));
+            document.getElementById('memberSince').textContent = joinDate.toLocaleDateString();
+            
+            // Load saved preferences
+            const savedCuisines = JSON.parse(localStorage.getItem('cuisinePrefs') || '[]');
+            const savedInterests = JSON.parse(localStorage.getItem('interestPrefs') || '[]');
+            
+            selectedCuisines = savedCuisines;
+            selectedInterests = savedInterests;
+            
+            updateTagSelections();
+        }
+        
+        function updateTagSelections() {
+            document.querySelectorAll('#cuisineTags .tag').forEach(tag => {
+                if (selectedCuisines.includes(tag.innerText)) {
+                    tag.classList.add('selected');
+                } else {
+                    tag.classList.remove('selected');
+                }
+            });
+            
+            document.querySelectorAll('#interestTags .tag').forEach(tag => {
+                if (selectedInterests.includes(tag.innerText)) {
+                    tag.classList.add('selected');
+                } else {
+                    tag.classList.remove('selected');
+                }
+            });
+        }
+        
+        // Setup tag click handlers
+        function setupTagHandlers() {
+            document.querySelectorAll('#cuisineTags .tag').forEach(tag => {
+                tag.addEventListener('click', () => {
+                    const cuisine = tag.innerText;
+                    if (selectedCuisines.includes(cuisine)) {
+                        selectedCuisines = selectedCuisines.filter(c => c !== cuisine);
+                    } else {
+                        selectedCuisines.push(cuisine);
+                    }
+                    updateTagSelections();
+                });
+            });
+            
+            document.querySelectorAll('#interestTags .tag').forEach(tag => {
+                tag.addEventListener('click', () => {
+                    const interest = tag.innerText;
+                    if (selectedInterests.includes(interest)) {
+                        selectedInterests = selectedInterests.filter(i => i !== interest);
+                    } else {
+                        selectedInterests.push(interest);
+                    }
+                    updateTagSelections();
+                });
+            });
+        }
+        
+        function updateProfile() {
+            const name = document.getElementById('name').value;
+            
+            if (!name) {
+                showMessage('Please enter your name', 'error');
+                return;
+            }
+            
+            // Save to localStorage
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.name = name;
+            user.cuisinePrefs = selectedCuisines;
+            user.interestPrefs = selectedInterests;
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            // Save preferences
+            localStorage.setItem('cuisinePrefs', JSON.stringify(selectedCuisines));
+            localStorage.setItem('interestPrefs', JSON.stringify(selectedInterests));
+            
+            showMessage('Profile updated successfully!', 'success');
+            
+            // Update avatar icon based on interests
+            updateAvatarIcon();
+        }
+        
+        function updateAvatarIcon() {
+            const avatar = document.getElementById('avatarIcon');
+            if (selectedInterests.includes('Beaches')) {
+                avatar.innerHTML = '🏖️';
+            } else if (selectedInterests.includes('Mountains')) {
+                avatar.innerHTML = '⛰️';
+            } else if (selectedInterests.includes('Adventure')) {
+                avatar.innerHTML = '🧗';
+            } else if (selectedInterests.includes('Food')) {
+                avatar.innerHTML = '🍜';
+            } else {
+                avatar.innerHTML = '✈️';
+            }
+        }
+        
+        function showMessage(msg, type) {
+            const msgDiv = document.getElementById('successMsg');
+            msgDiv.innerHTML = msg;
+            msgDiv.style.display = 'block';
+            msgDiv.style.background = type === 'success' ? 'rgba(0, 184, 148, 0.3)' : 'rgba(255, 107, 107, 0.3)';
+            
+            setTimeout(() => {
+                msgDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+        
+        // Initialize
+        loadUserData();
+        setupTagHandlers();
+        updateAvatarIcon();
+    </script>
+</body>
+</html>

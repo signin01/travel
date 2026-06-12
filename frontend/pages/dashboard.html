@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AI Travel Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd89b;
+        }
+        .recent-trips {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+        }
+        .trip-item {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+        }
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .dashboard-header { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>📊 My Dashboard</h1>
+            <div>
+                <a href="../index.html" class="btn">← Back to Planner</a>
+                <a href="profile.html" class="btn btn-secondary">👤 Profile</a>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTrips">0</div>
+                <p>Total Trips</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalBudget"></div>
+                <p>Total Budget</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgDays">0</div>
+                <p>Average Days</p>
+            </div>
+        </div>
+
+        <div class="recent-trips">
+            <h2>🕒 Recent Trips</h2>
+            <div id="tripsList">
+                <p>Loading your trips...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/trips/my-trips', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const trips = await response.json();
+
+                document.getElementById('totalTrips').textContent = trips.length;
+                
+                let totalBudget = 0;
+                let totalDays = 0;
+                trips.forEach(trip => {
+                    totalBudget += trip.budget || 0;
+                    totalDays += trip.days || 0;
+                });
+                
+                document.getElementById('totalBudget').textContent = '$' + totalBudget;
+                document.getElementById('avgDays').textContent = trips.length ? Math.round(totalDays / trips.length) : 0;
+
+                const tripsList = document.getElementById('tripsList');
+                if (trips.length === 0) {
+                    tripsList.innerHTML = '<p>No trips yet. Create your first trip!</p>';
+                } else {
+                    tripsList.innerHTML = trips.map(trip => 
+                        <div class="trip-item">
+                            <div>
+                                <strong>✈️ </strong>
+                                <br>
+                                <small> days | utf8{trip.budget}</small>
+                            </div>
+                            <div>
+                                <small></small>
+                            </div>
+                        </div>
+                    ).join('');
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
